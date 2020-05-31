@@ -1,3 +1,6 @@
+# Build outputs
+src/gre-tunneld
+
 # Prerequisites
 *.d
 
@@ -50,3 +53,33 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+# http://www.gnu.org/software/automake
+Makefile
+Makefile.in
+*.deps/
+/ar-lib
+/mdate-sh
+/py-compile
+/test-driver
+/ylwrap
+
+# http://www.gnu.org/software/autoconf
+/autom4te.cache
+/autoscan.log
+/autoscan-*.log
+/aclocal.m4
+/compile
+/config.guess
+/config.h.in
+/config.h
+/config.log
+/config.status
+/config.sub
+/configure
+/configure.scan
+/depcomp
+/install-sh
+/missing
+/stamp-h1
