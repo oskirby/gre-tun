@@ -48,13 +48,16 @@ main(int argc, char **argv)
     int sockfd;
 
     /* Parsed Options. */
-    const char              *server_name = NULL;
+    const char  *server_name = NULL;
+    int         dtls_enable = 0;
+
     /* Parse the command line options */
-    const char *short_options = "hsc:";
+    const char *short_options = "hsc:d";
     const struct option long_options[] = {
         {"help",   no_argument, 0,       'h'},
         {"server", no_argument, 0,       's'},
         {"client", required_argument, 0, 'c'},
+        {"dtls",   no_argument, 0,       'd'},
         {0, 0, 0, 0}
     };
     optind = 0;
@@ -73,6 +76,10 @@ main(int argc, char **argv)
             
             case 's':
                 server_name = NULL;
+                break;
+            
+            case 'd':
+                dtls_enable = 1;
                 break;
             
             case '?':
@@ -146,7 +153,11 @@ main(int argc, char **argv)
         freeaddrinfo(result);
 
         /* Run the client daemon */
-        ret = gre_client_run(sockfd);
+        if (dtls_enable) {
+            ret = gre_client_dtls_run(sockfd);
+        } else {
+            ret = gre_client_run(sockfd);
+        }
     }
     /* Otherwise, create the socket for server mode. */
     else {

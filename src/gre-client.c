@@ -181,10 +181,35 @@ gre_client_run(int sockfd)
 
 /* DTLS Client */
 int
-gre_dtls_client_run(int sockfd)
+gre_client_dtls_run(int sockfd)
 {
+    int ret;
+    gnutls_session_t session;
     gnutls_certificate_credentials_t xcred;
 
+    /* Initialze the GnuTLS library */
     gnutls_global_init();
     gnutls_certificate_allocate_credentials(&xcred);
+    gnutls_certificate_set_x509_system_trust(xcred);
+
+    /* Initialze the GnuTLS session */
+    gnutls_init(&session, GNUTLS_CLIENT | GNUTLS_DATAGRAM);
+    gnutls_set_default_priority(session);
+    gnutls_transport_set_int(session, sockfd);
+    
+    /* Perform the DTLS handshake */
+    do {
+        ret = gnutls_handshake(session);
+    } while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN);
+    if (ret < 0) {
+        fprintf(stderr, "DTLS Handshake failed: ");
+        gnutls_perror(ret);
+        goto handshake_fail;
+    }
+
+handshake_fail:
+    gnutls_deinit(session);
+    gnutls_certificate_free_credentials(xcred);
+    gnutls_global_deinit();
+    return 0;
 }
