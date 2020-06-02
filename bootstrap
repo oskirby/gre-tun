@@ -4,4 +4,5 @@ rm -rf config.cache autom4te*.cache
 aclocal
 autoconf
 autoheader
+libtoolize --automake
 automake --add-missing --foreign

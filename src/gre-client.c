@@ -28,6 +28,8 @@
 #include <linux/if.h>
 #include <linux/if_tun.h>
 #include <linux/if_ether.h>
+#include <gnutls/gnutls.h>
+#include <gnutls/dtls.h>
 
 #include "gre.h"
 
@@ -134,6 +136,7 @@ gre_send_zlp(int sockfd)
     return write(sockfd, &gre, sizeof(gre));
 }
 
+/* Unsecured clients. */
 int
 gre_client_run(int sockfd)
 {
@@ -174,4 +177,14 @@ gre_client_run(int sockfd)
     }
 
     return 0;
+}
+
+/* DTLS Client */
+int
+gre_dtls_client_run(int sockfd)
+{
+    gnutls_certificate_credentials_t xcred;
+
+    gnutls_global_init();
+    gnutls_certificate_allocate_credentials(&xcred);
 }
