@@ -37,6 +37,7 @@ struct gre_conn {
     struct gre_conn *prev;
 
     struct sockaddr_storage addr;
+    socklen_t addrlen;
     int tunfd;
 };
 
@@ -88,13 +89,14 @@ gre_lookup_conn(struct gre_ctx *ctx, const struct sockaddr_storage *sa)
 } /* gre_lookup_conn */
 
 static struct gre_conn *
-gre_create_conn(struct gre_ctx *ctx, const struct sockaddr_storage *sa)
+gre_create_conn(struct gre_ctx *ctx, const struct sockaddr_storage *sa, socklen_t len)
 {
     struct gre_conn *conn = malloc(sizeof(struct gre_conn));
     if (!conn) {
         return NULL;
     }
-    memcpy(&conn->addr, sa, sizeof(struct sockaddr_storage));
+    conn->addrlen = len;
+    memcpy(&conn->addr, sa, len);
 
     conn->tunfd = gre_allocate_tun();
     if (conn->tunfd < 0) {
@@ -116,20 +118,16 @@ static int
 gre_process_socket(struct gre_ctx *ctx)
 {
     struct gre_conn *conn;
-    struct sockaddr_storage sas;
+    struct sockaddr_storage addr;
     socklen_t addrlen = sizeof(struct sockaddr_storage);
     struct gre_header gre;
     struct tun_header tun;
     char rxbuf[IP6_MTU + sizeof(struct gre_header)];
     int pktlen;
-
-    struct iovec iov[] = {
-        {.iov_base = &tun, .iov_len = sizeof(tun)},
-        {.iov_base = rxbuf + sizeof(struct gre_header), .iov_len = 0},
-    };
+    struct iovec iov[2];
 
     /* Receive a packet from the tunnel device */
-    pktlen = recvfrom(ctx->sockfd, rxbuf, sizeof(rxbuf), 0, (struct sockaddr *)&sas, &addrlen);
+    pktlen = recvfrom(ctx->sockfd, rxbuf, sizeof(rxbuf), 0, (struct sockaddr *)&addr, &addrlen);
     if (pktlen < 0) {
         fprintf(stderr, "recv() failed on GRE socket: %s\n", strerror(errno));
         return -1;
@@ -149,11 +147,11 @@ gre_process_socket(struct gre_ctx *ctx)
     }
 
     /* Lookup the connection via the packet source. */
-    conn = gre_lookup_conn(ctx, &sas);
+    conn = gre_lookup_conn(ctx, &addr);
     if (!conn) {
         /* No such connection? Create one! */
         /* TODO: DTLS cookie should go here to guard against DDoS */
-        conn = gre_create_conn(ctx, &sas);
+        conn = gre_create_conn(ctx, &addr, addrlen);
         if (!conn) {
             fprintf(stderr, "Failed to create GRE Connection, dropping packet\n");
             return -1;

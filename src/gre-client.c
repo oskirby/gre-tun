@@ -120,6 +120,20 @@ gre_process_tunnel(int sockfd, int tunfd)
     return writev(sockfd, iov, 2);
 }
 
+/* Send a zero-length GRE packet to establish a connection. */
+static int
+gre_send_zlp(int sockfd)
+{
+    struct gre_header gre;
+
+    memset(&gre, 0, sizeof(gre));
+    gre.flags = 0;
+    gre.proto = htons(ETH_P_IPV6);
+    gre.cksum = 0;
+    gre.reserved = 0;
+    return write(sockfd, &gre, sizeof(gre));
+}
+
 int
 gre_client_run(int sockfd)
 {
@@ -127,6 +141,8 @@ gre_client_run(int sockfd)
     if (tunfd < 0) {
         return -1;
     }
+
+    gre_send_zlp(sockfd);
 
     while (1) {
         fd_set rfd;
