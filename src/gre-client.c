@@ -194,6 +194,7 @@ gre_client_dtls_run(int sockfd)
 
     /* Initialze the GnuTLS session */
     gnutls_init(&session, GNUTLS_CLIENT | GNUTLS_DATAGRAM);
+    gnutls_credentials_set(session, GNUTLS_CRD_CERTIFICATE, xcred);
     gnutls_set_default_priority(session);
     gnutls_transport_set_int(session, sockfd);
     

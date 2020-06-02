@@ -47,6 +47,7 @@ struct tun_header {
 
 /* Run the tunnel interface. */
 int gre_server_run(int sockfd);
+int gre_server_dtls_run(int sockfd);
 int gre_client_run(int sockfd);
 int gre_client_dtls_run(int sockfd);
 int gre_allocate_tun(void);

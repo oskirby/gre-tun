@@ -183,7 +183,11 @@ main(int argc, char **argv)
         }
 
         /* Run the server daemon */
-        ret = gre_server_run(sockfd);
+        if (dtls_enable) {
+            ret = gre_server_dtls_run(sockfd);
+        } else {
+            ret = gre_server_run(sockfd);
+        }
     }
 
     /* Run the tunnel interface. */
